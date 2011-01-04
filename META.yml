@@ -1,0 +1,17 @@
+--- #YAML:1.0
+name:                Device-Blkid-E2fsprogs
+version:             0.10
+abstract:            Perl interface to e2fsprogs versions (1.xx.xx) of libblkid
+license:             ~
+author:              
+    - Raymond Mroz <rmroz@cpan.org>
+generated_by:        ExtUtils::MakeMaker version 6.42
+distribution_type:   module
+requires:     
+    Data::Dump:                    0
+    Exporter:                      0
+    Test::Builder:                 0
+    Test::More:                    0
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
+    version: 1.3
