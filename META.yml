@@ -1,10 +1,10 @@
 --- #YAML:1.0
 name:                Device-Blkid-E2fsprogs
-version:             0.12
+version:             0.14
 abstract:            Perl interface to e2fsprogs-based libblkid (v1.33 - v1.41.4)
 license:             ~
 author:              
-    - Raymond Mroz <rmroz@cpan.org>
+    - Raymond Mroz <mroz@cpan.org>
 generated_by:        ExtUtils::MakeMaker version 6.42
 distribution_type:   module
 requires:     
