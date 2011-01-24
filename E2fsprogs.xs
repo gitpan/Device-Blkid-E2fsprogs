@@ -5,7 +5,7 @@
  * E2fsprogs.xs
  * December 2010
  *
- * Version: 0.28
+ * Version: 0.30
  */
 
 
@@ -16,6 +16,11 @@
 #include <assert.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 
 #include "ppport.h"
 
@@ -210,32 +215,69 @@ Device _blkid_get_dev(Cache cache, const char *devname, int flags)
     Device device = NULL;
 
     /* If we get a NULL, something is wrong, print error and return NULL(undef) */
-    if ( blkid_get_dev(cache, devname, flags) == NULL )
+    device = blkid_get_dev(cache, devname, flags);
+    if (device == NULL)
     {
         #ifdef __DEBUG
         perror("\tDEBUG: blkid_get_dev(): Error retrieving device object");
         #endif //__DEBUG
         croak("Error retrieving device object: %s\n", strerror(errno));
     }
-
+    
     return device;
 }
 
 
 /* extern blkid_loff_t blkid_get_dev_size(int fd) */
-blkid_loff_t _blkid_get_dev_size(int fd)
+SV *_blkid_get_dev_size(const char *devname)
 {
     #ifdef __DEBUG
     printf("\tDEBUG: _blkid_get_dev_size()\n");
-    printf("\tDEBUG: arg(1): fd:%d\n", fd);
-    assert(fd > 0);
+    printf("\tDEBUG: arg(1): devname:%s\n", devname);
+    assert(devname);
     #endif //__DEBUG
 
-    /* TODO: Determine what, if anything, is returned on error condition
-     *       when a bad fd is passed in and then implement a 'perlish'
-     *       return to this function.
-     */
-    return blkid_get_dev_size(fd);
+    int fd      = 0;
+    IV iv_size  = 0;
+    SV *sv_size = NULL;
+
+    fd = open(devname, O_RDONLY);
+    if (fd == -1)
+    {
+        #ifdef __DEBUG
+        perror("\tDEBUG: _blkid_get_dev_size(): Bad file descriptor");
+        #endif //__DEBUG
+
+        croak("File descriptor allocation : %s", strerror(errno));
+    }
+
+    /* Grab a size, returns a 1 on fail, we return NULL(undef) */
+    iv_size = blkid_get_dev_size(fd);
+
+    if (iv_size == 1)
+    {
+        #ifdef __DEBUG
+        printf("\tDEBUG: _blkid_get_dev_size()\n");
+        printf("\tDEBUG: invalid result on size\n");
+        #endif //__DEBUG
+        
+        return &PL_sv_undef;
+    }
+
+    /* close the fd, error if there is a problem */
+    if ( close(fd) == -1 )
+    {
+        #ifdef __DEBUG
+        perror("\t_blkid_get_dev_size(): error closing fd");
+        #endif //__DEBUG
+
+        croak("File descriptor close : %s", strerror(errno));
+    }
+
+    /* Load a SV* with IV for return */
+    sv_size = newSViv(iv_size);    
+    
+    return sv_size;
 }
 
 
@@ -729,8 +771,8 @@ Device _blkid_get_dev(cache, devname, flags)
                        int            flags
 
 
-blkid_loff_t _blkid_get_dev_size(fd)
-                       int            fd
+SV *_blkid_get_dev_size(devname)
+                       const char *   devname
 
 
 const char *_blkid_known_fstype(fstype)
